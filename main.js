@@ -1,18 +1,27 @@
 const SHA256 = require('crypto-js/sha256');
 
+
+class Transaction{
+    constructor(fromAddress, toAddress, amount){
+        this.fromAddress = fromAddress;
+        this.toAddress = toAddress;
+        this.amount = amount;
+    }
+}
+
 class Block {
-    //index is optional, data to store details, previousHash ensures blockchain integrity
-    constructor(index, timestamp, data, previousHash = '') {
-        this.index = index;
+    //index is optional, transactions to store details, previousHash ensures blockchain integrity
+    constructor(timestamp, transactions, previousHash = '') {
+        // this.index = index; //dont need index in a block chain, order of block is determined by position, not index
         this.timestamp = timestamp;
-        this.data = data;
+        this.transactions = transactions;
         this.previousHash = previousHash;
         this.hash = this.calculateHash();
         this.nonce = 0; 
     }
 
     calculateHash() {
-        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data) + this.nonce).toString();
+        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.transactions) + this.nonce).toString();
     }
 
     //To prevent someone from changing all our hashes and passing our isChainValid test, we need proof of work:
@@ -30,11 +39,14 @@ class Block {
 class Blockchain {
     constructor() {
         this.chain = [this.createGenesisBlock()];
-        this.difficulty = 5;
+        this.difficulty = 2;
+        this.pendingTransaction = []; //stores transactions that will be included in the next block.(blockchain adds blocks in intervals and these transaction need to wait on this)
+        this.miningReward = 100; //reward the miners. miners are playing the role of  bank tellers by
+                                // inspecting checks, making sure all the appropriate signatures and account numbers are there, checking the customer’s ID, and looking for proof that the customer has enough cash-on-hand to fund the transaction.
     }
 
     createGenesisBlock() {
-        return new Block(0, "01/01/2017", "Genesis Block", "NA")
+        return new Block("01/01/2017", "Genesis Block", "NA")
     }
 
     getLatestBlock() {
@@ -77,7 +89,7 @@ miCoin.addBlock(new Block(2, "09/24/1988", {
 // console.log(JSON.stringify(miCoin, null, 4));
 
 // console.log('valid?', miCoin.isChainValid());
-// miCoin.chain[1].data = {
+// miCoin.chain[1].transactions = {
 //     amount: 19999
 // }
 // miCoin.chain[1].hash = miCoin.chain[1].calculateHash();
